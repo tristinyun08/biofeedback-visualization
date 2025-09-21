@@ -91,7 +91,12 @@ ui <- fluidPage(
   useShinyjs(), 
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
-    tags$script(src = "interactions.js")
+    tags$script(src = "interactions.js"),
+    tags$script(HTML("
+      function enableScrolling() {
+        document.body.classList.add('allow-scroll');
+      }
+    "))
   ),
   
   theme = bslib::bs_theme(bootswatch = "cyborg"),
@@ -227,6 +232,9 @@ server <- function(input, output, session) {
     file.copy(temp_wav_path, "www/current_audio.wav", overwrite = TRUE)
     audio_src(paste0("current_audio.wav?", runif(1)))
     showNotification("Analysis complete.", type = "message")
+    
+    # Enable scrolling when analysis completes
+    shinyjs::runjs("enableScrolling();")
   })
   
 

@@ -1,4 +1,6 @@
 function syncPlotWithAudio(el) {
+
+function syncPlotWithAudio(el) {
   let audioPlayer = null;
 
   const updateMarker = (timeToDraw) => {
