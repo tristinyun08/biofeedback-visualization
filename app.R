@@ -95,18 +95,43 @@ ui <- fluidPage(
   ),
   
   theme = bslib::bs_theme(bootswatch = "cyborg"),
-  titlePanel("Pulse & Pitch: Performance Analysis Dashboard"),
-  sidebarLayout(
-    sidebarPanel(
-      fileInput("hrv_file", "1. Upload Performance HRV (.txt)"),
-      fileInput("audio_file", "2. Upload Performance Audio (.m4a, etc.)"),
-      numericInput("duration", "3. Analysis Duration (seconds):", value = 60, min = 10, max = 300),
+  
+  # Single centered container
+  div(class = "main-container",
+    # Title
+    div(class = "title-container",
+      h1("Pulse & Pitch"),
+      div(class = "subtitle", "Performance Analysis Dashboard"),
+      div(class = "project-description",
+        p("This project was inspired by a deep-dive analysis of pianist Yuja Wang's marathon concert at Carnegie Hall, where I correlated her heart rate variability (HRV) with the performance. To make this type of analysis accessible to any performer or researcher, I developed this interactive R Shiny dashboard. The application allows users to upload their own HRV and audio data to visualize the real-time synchronization between physiological stress, heart rate, and key acoustic features like loudness and pitch."),
+        br(),
+        p("Learn more about the original Yuja Wang project and my other research at", 
+          tags$a(href = "https://tristin.org", target = "_blank", "tristin.org", style = "color: #7DE0F6; text-decoration: none;"), ".")
+      )
+    ),
+    
+    # Upload section - centered
+    div(class = "upload-section",
+      h3("Upload & Analysis"),
+      
+      div(class = "file-input-container",
+        fileInput("hrv_file", "1. Upload Performance HRV (.txt)")
+      ),
+      
+      div(class = "file-input-container",
+        fileInput("audio_file", "2. Upload Performance Audio (.m4a, etc.)")
+      ),
+      
+      div(class = "numeric-input-container",
+        numericInput("duration", "3. Analysis Duration (seconds):", value = 60, min = 10, max = 300)
+      ),
+      
       # Apply your custom class to the button
       actionButton("run_analysis", "4. Run Analysis", class = "btn-primary btn-lg btn-run-analysis")
     ),
-    # In your sidebarLayout(), this is the new mainPanel
-    mainPanel(
-      # This dynamic UI output will contain either the welcome screen or the results tabs.
+    
+    # Results section
+    div(class = "results-section",
       uiOutput("main_content")
     )
   )
@@ -117,15 +142,11 @@ server <- function(input, output, session) {
   output$main_content <- renderUI({
     
     # If the analysis_data() reactive is NULL (i.e., the app has just started or been reset),
-    # show the welcome message and instructions.
+    # show empty main panel
     if (is.null(analysis_data())) {
       
       div(
-        class = "welcome-panel",
-        style = "padding: 50px; text-align: center; color: #aaa; background-color: #272B30; border-radius: 8px;",
-        h3("Welcome to the Performance Analysis Dashboard"),
-        p("To begin, please upload your HRV and audio files using the panel on the left."),
-        p("Adjust the analysis duration if needed, then click 'Run Analysis'.")
+        style = "text-align: center; padding: 3rem 2rem; color: #e2e8f0; min-height: 400px; display: flex; align-items: center; justify-content: center;"
       )
       
     } else {
@@ -186,13 +207,6 @@ server <- function(input, output, session) {
   })
   
   
-  # Helper function to create summary boxes using CSS classes
-  create_summary_box <- function(value, label) {
-    div(class = "summary-box",
-        div(class = "summary-box-value", value),
-        div(class = "summary-box-label", label)
-    )
-  }
   # Reactive values now store a list with timeseries and summary data
   analysis_data <- reactiveVal(NULL)
   audio_src <- reactiveVal(NULL)
@@ -202,7 +216,6 @@ server <- function(input, output, session) {
     req(input$hrv_file, input$audio_file)
     showNotification("Processing files...", type = "message", duration = 5)
     temp_wav_path <- tempfile(fileext = ".wav")
-    #av::av_audio_convert(input$audio_file$datapath, output = temp_wav_path, total_time = input$duration)
     av::av_audio_convert(input$audio_file$datapath, output = temp_wav_path)
     # The analysis function now returns a list
     full_data <- run_full_analysis(input$hrv_file$datapath, temp_wav_path, duration_s = input$duration)
@@ -274,11 +287,6 @@ server <- function(input, output, session) {
         ),
         clickmode = "event+select"  # reliable clicks on line traces
       )
-    
-    htmlwidgets::onRender(
-      combo,
-      "function(el, x){ if (window.syncPlotWithAudio) window.syncPlotWithAudio(el); }"
-    )
     
     htmlwidgets::onRender(
       combo,
