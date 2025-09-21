@@ -1,0 +1,35 @@
+/* Styling for the HR Summary Boxes */
+.summary-box {
+  text-align: center;
+  color: white;
+  padding: 10px;
+  background-color: #2a2a3a; /* A slightly different background for contrast */
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.summary-box-value {
+  font-size: 44px;
+  font-weight: bold;
+  line-height: 1.1;
+  color: #7DE0F6; /* Use a color from your charts */
+}
+
+.summary-box-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+/* Custom style for the main action button */
+.btn-run-analysis {
+  font-weight: bold;
+  background-color: #FF004D; /* Use a color from your charts */
+  border-color: #FF004D;
+}
+
+/* Style for the audio player */
+#audioplayer {
+  width: 100%;
+  margin-bottom: 20px;
+}

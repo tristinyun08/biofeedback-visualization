@@ -1,0 +1,28 @@
+Package: biofeedback-visualization
+Type: Package
+Title: Biofeedback Visualization Dashboard
+Version: 1.0.0
+Authors@R: person("Tristin", "Yun", email = "tristinyun08@gmail.com", role = c("aut", "cre"))
+Description: A comprehensive R Shiny application for analyzing the relationship between physiological data (heart rate variability) and audio performance data. Provides real-time visualization and analysis of how musical performance affects autonomic nervous system responses.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.0.0)
+Imports:
+    shiny (>= 1.7.0),
+    shinyjs (>= 2.0.0),
+    bslib (>= 0.4.0),
+    ggplot2 (>= 3.4.0),
+    dplyr (>= 1.1.0),
+    tuneR (>= 1.4.0),
+    seewave (>= 2.2.0),
+    av (>= 0.8.0),
+    plotly (>= 4.10.0),
+    htmlwidgets (>= 1.6.0),
+    shinycssloaders (>= 1.0.0)
+Suggests:
+    testthat (>= 3.0.0),
+    knitr (>= 1.40.0),
+    rmarkdown (>= 2.20.0)
+RoxygenNote: 7.2.0

@@ -1,0 +1,58 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Shiny
+rsconnect/
+shinyapps.io/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Audio files (except example)
+www/*.wav
+www/*.mp3
+www/*.m4a
+www/*.aac
+!www/current_audio.wav
+
+# Data files
+*.txt
+*.csv
+*.xlsx
+*.xls
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# R package specific
+inst/doc/
+.Rinstignore
+.Rbuildignore
+
+# Shiny specific
+shiny_logs/
+logs/
+
+# Temporary Shiny files
+temp/
+tmp/
