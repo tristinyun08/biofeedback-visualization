@@ -2,6 +2,12 @@
 
 A comprehensive R Shiny application for analyzing the relationship between physiological data (heart rate variability) and audio performance data. This tool provides real-time visualization and analysis of how musical performance affects autonomic nervous system responses.
 
+## Live Demo
+
+**[Try the application online](https://tristin.shinyapps.io/Biofeedback_Visualization/)**
+
+The application is hosted on ShinyApps.io and ready to use with your own HRV and audio data.
+
 ## Features
 
 ### Audio Analysis
