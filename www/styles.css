@@ -1,35 +1,285 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+
+/* Global Typography */
+body {
+  font-family: 'Merriweather', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  line-height: 1.6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
+/* Title Styling - No Container */
+.title-container h1 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  color: white;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.title-container .subtitle {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 400;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 0;
+  color: white;
+  text-align: center;
+  opacity: 0.9;
+  letter-spacing: 0.01em;
+}
+
+.project-description {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: white;
+  text-align: center;
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 0.5rem 1rem;
+}
+
+.project-description p {
+  margin: 0;
+}
+
+/* Main Container - Single Centered Container */
+.main-container {
+  background: black;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Upload Section Styling */
+.upload-section {
+  text-align: center;
+  margin: 1rem 0;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.upload-section h3 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+/* File Input Styling */
+.file-input-container {
+  margin-bottom: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.file-input-container .form-label {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 400;
+  color: white;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  text-align: center;
+}
+
+.file-input-container .form-control {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 300px;
+}
+
+/* Numeric Input Styling */
+.numeric-input-container {
+  margin-bottom: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.numeric-input-container .form-label {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 400;
+  color: white;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  text-align: center;
+}
+
+.numeric-input-container .form-control {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 200px;
+}
+
+
 /* Styling for the HR Summary Boxes */
 .summary-box {
   text-align: center;
   color: white;
-  padding: 10px;
-  background-color: #2a2a3a; /* A slightly different background for contrast */
-  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-radius: 12px;
   margin-top: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .summary-box-value {
-  font-size: 44px;
-  font-weight: bold;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 2.5rem;
+  font-weight: 600;
   line-height: 1.1;
-  color: #7DE0F6; /* Use a color from your charts */
+  color: #7DE0F6;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .summary-box-label {
-  font-size: 14px;
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 400;
   text-transform: uppercase;
-  color: #aaa;
+  color: #a0aec0;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
 }
 
 /* Custom style for the main action button */
 .btn-run-analysis {
-  font-weight: bold;
-  background-color: #FF004D; /* Use a color from your charts */
-  border-color: #FF004D;
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #FF004D 0%, #ff6b9d 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 15px rgba(255, 0, 77, 0.3);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  margin: 1rem auto 0 auto;
+  display: block;
+}
+
+.btn-run-analysis:hover {
+  background: linear-gradient(135deg, #e6003d 0%, #ff5a8a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 0, 77, 0.4);
+}
+
+.btn-run-analysis:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(255, 0, 77, 0.3);
 }
 
 /* Style for the audio player */
 #audioplayer {
   width: 100%;
   margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab Styling */
+.nav-tabs {
+  border-bottom: 2px solid #4a5568;
+  margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 400;
+  color: #a0aec0;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  padding: 0.75rem 1.5rem;
+  margin-right: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #e2e8f0;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tabs .nav-link.active {
+  color: #7DE0F6;
+  background-color: #2d3748;
+  border-bottom: 2px solid #7DE0F6;
+}
+
+/* Results Section Styling */
+.results-section {
+  text-align: center;
+  margin-top: 3rem;
+  width: 100%;
+}
+
+
+/* Center tab content */
+.tab-content {
+  text-align: center;
+}
+
+/* Center plots and widgets */
+.plotly {
+  margin: 0 auto;
+}
+
+/* Center summary boxes row */
+.row {
+  justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .title-container h1 {
+    font-size: 2rem;
+  }
+  
+  .title-container .subtitle {
+    font-size: 1rem;
+  }
+  
+  .project-description {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    margin: 1rem auto;
+  }
+  
+  .summary-box-value {
+    font-size: 2rem;
+  }
 }
