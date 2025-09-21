@@ -4,17 +4,17 @@ A comprehensive R Shiny application for analyzing the relationship between physi
 
 ## Features
 
-### 🎵 Audio Analysis
+### Audio Analysis
 - **Waveform Visualization**: Real-time audio waveform display with interactive seeking
 - **Musical Features**: Analysis of loudness (RMS), pitch (fundamental frequency), and brightness (spectral centroid)
 - **Audio Synchronization**: Click on plots to seek through audio playback
 
-### ❤️ Physiological Analysis
+### Physiological Analysis
 - **Heart Rate Variability (HRV)**: Rolling RMSSD calculation with artifact correction
 - **Heart Rate Monitoring**: Real-time BPM tracking with min/max/average summaries
 - **Stress Zone Analysis**: Relative stress/recovery zones based on session data
 
-### 📊 Interactive Visualizations
+### Interactive Visualizations
 - **Combined Performance View**: Synchronized audio waveform and heart rate plots
 - **Correlation Analysis**: Cross-correlation between audio features and physiological metrics
 - **Joint Analysis Plots**: Dual-axis visualizations showing relationships between metrics
@@ -127,17 +127,6 @@ The application can be deployed to:
 - **RStudio Connect**: Direct deployment from RStudio
 - **Local server**: Run locally for development and testing
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - Built with R Shiny framework
@@ -145,6 +134,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Interactive visualizations using `plotly`
 - Styling with `bslib` and custom CSS
 
-## Support
 
-For issues and questions, please open an issue on GitHub or contact the development team.
