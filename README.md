@@ -45,7 +45,7 @@ install.packages(c(
 
 ### Running the Application
 1. Clone this repository
-2. Open `appv2.R` in RStudio
+2. Open `app.R` in RStudio
 3. Click "Run App" or execute:
 ```r
 shiny::runApp()
@@ -119,13 +119,6 @@ biofeedback-visualization/
 ├── rsconnect/           # Deployment configuration
 └── README.md           # This file
 ```
-
-## Deployment
-
-The application can be deployed to:
-- **ShinyApps.io**: Use the `rsconnect` folder configuration
-- **RStudio Connect**: Direct deployment from RStudio
-- **Local server**: Run locally for development and testing
 
 ## Acknowledgments
 
