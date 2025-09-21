@@ -20,7 +20,6 @@ www/*.wav
 www/*.mp3
 www/*.m4a
 www/*.aac
-!www/current_audio.wav
 
 # Data files
 *.txt
