@@ -22,7 +22,6 @@ www/*.m4a
 www/*.aac
 
 # Data files
-*.txt
 *.csv
 *.xlsx
 *.xls
