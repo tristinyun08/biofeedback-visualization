@@ -30,7 +30,7 @@ run_full_analysis <- function(hrv_path, audio_path, duration_s = 60) {
       }
     }
     time_s <- cumsum(rr_corrected) / 1000; time_s <- time_s - time_s[1]; instant_hr <- 60000 / rr_corrected
-    rolling_rmssd <- rep(NA_real_, length(rr_corrected)); win_max <- 30
+    rolling_rmssd <- rep(NA_real_, length(rr_corrected)); win_max <- 5
     for (i in seq_along(rr_corrected)) {
       window_start_time <- max(0, time_s[i] - win_max)
       idx <- which(time_s <= time_s[i] & time_s > window_start_time)
@@ -175,8 +175,10 @@ server <- function(input, output, session) {
           ),
           
           tabPanel("Relative Stress Sync",
-                   shinycssloaders::withSpinner(plotlyOutput("relative_zones_plot", height = "400px"), color = "#FFA500"),
-                   shinycssloaders::withSpinner(plotlyOutput("relative_levels_plot", height = "300px"), color = "#FFA500")
+                   shinycssloaders::withSpinner(
+                     plotlyOutput("relative_combo", height="680px"), 
+                     color="#FFA500"
+                   )
           ),
           
           tabPanel("Audio Features Sync",
@@ -303,58 +305,127 @@ server <- function(input, output, session) {
   })
   
   relative_data <- reactive({ req(analysis_data()); base <- analysis_data()$timeseries %>% dplyr::select(Time_s, RMSSD_mean) %>% dplyr::arrange(Time_s); valid <- base %>% dplyr::filter(is.finite(RMSSD_mean)); if (nrow(valid) < 3) { return(list( data  = base %>% dplyr::mutate(Relative_Level = factor(NA_character_, levels = c("Relatively Relaxed","Near Session Average","Relatively High Strain"))), mean  = NA_real_, lower = NA_real_, upper = NA_real_, y_min = NA_real_, y_max = NA_real_ )) }; m <- mean(valid$RMSSD_mean, na.rm = TRUE); s <- sd(valid$RMSSD_mean, na.rm = TRUE); lower <- m - 0.5 * s; upper <- m + 0.5 * s; y_min <- min(valid$RMSSD_mean, na.rm = TRUE); y_max <- max(valid$RMSSD_mean, na.rm = TRUE); base <- base %>% dplyr::mutate( Relative_Level = dplyr::case_when( !is.finite(RMSSD_mean) ~ NA_character_, RMSSD_mean < lower ~ "Relatively High Strain", RMSSD_mean <= upper ~ "Near Session Average", TRUE ~ "Relatively Relaxed" ), Relative_Level = factor(Relative_Level, levels = c("Relatively Relaxed","Near Session Average","Relatively High Strain")) ); list(data = base, mean = m, lower = lower, upper = upper, y_min = y_min, y_max = y_max) })
-  
-  output$relative_zones_plot <- renderPlotly({
+
+  output$relative_combo <- renderPlotly({
     info <- relative_data()
-    relative_colors <- c("Relatively Relaxed"="#4575b4","Near Session Average"="#abd9e9","Relatively High Strain"="#f46d43")
+    relative_colors <- c(
+      "Relatively Relaxed"     = "#4575b4",
+      "Near Session Average"   = "#abd9e9",
+      "Relatively High Strain" = "#f46d43"
+    )
+    levs <- names(relative_colors)
+    
     x_min <- 0
     x_max <- input$duration
-    have_thr <- is.finite(info$mean) && is.finite(info$lower) && is.finite(info$upper) && is.finite(info$y_min) && is.finite(info$y_max)
+    have_thr <- is.finite(info$mean) && is.finite(info$lower) &&
+      is.finite(info$upper) && is.finite(info$y_min) && is.finite(info$y_max)
+    
+    # --------- build shading bands for geom_ribbon (needs full x sequence) ---------
     bands <- NULL
     if (have_thr) {
-      make_band <- function(name, ymin_val, ymax_val) {
-        dplyr::tibble(Time_s=c(x_min,x_max), ymin=c(ymin_val,ymin_val), ymax=c(ymax_val,ymax_val), Zone=factor(name, levels=c("Relatively Relaxed","Near Session Average","Relatively High Strain")))
-      }
+      xgrid <- seq(x_min, x_max, by = 1)
+      n <- length(xgrid)
       bands <- dplyr::bind_rows(
-        make_band("Relatively Relaxed", info$upper, info$y_max),
-        make_band("Near Session Average", info$lower, info$upper),
-        make_band("Relatively High Strain", info$y_min, info$lower)
+        dplyr::tibble(Time_s = xgrid,
+                      ymin   = rep(info$upper, n),
+                      ymax   = rep(info$y_max, n),
+                      Zone   = factor("Relatively Relaxed", levels = levs)),
+        dplyr::tibble(Time_s = xgrid,
+                      ymin   = rep(info$lower, n),
+                      ymax   = rep(info$upper, n),
+                      Zone   = factor("Near Session Average", levels = levs)),
+        dplyr::tibble(Time_s = xgrid,
+                      ymin   = rep(info$y_min, n),
+                      ymax   = rep(info$lower, n),
+                      Zone   = factor("Relatively High Strain", levels = levs))
       )
     }
-    p <- ggplot(info$data, aes(x=Time_s, y=RMSSD_mean)) +
-      { if (!is.null(bands)) geom_ribbon(data=bands, aes(x=Time_s,ymin=ymin,ymax=ymax,fill=Zone), inherit.aes=FALSE, alpha=0.5, color=NA) } +
-      geom_line(color="white", size=1.2, na.rm=TRUE) +
-      { if (have_thr) geom_hline(yintercept = info$mean,  color="yellow", linetype="dashed") } +
-      { if (have_thr) geom_hline(yintercept = c(info$lower, info$upper), color="yellow", linetype="dotted") } +
-      scale_fill_manual(name="Relative Zone", values=relative_colors, drop=FALSE) +
-      labs(title="Violin RMSSD with Relative Zones", subtitle="Dashed = session mean; Dotted = ±0.5 SD", x=NULL, y="Rolling RMSSD (ms)") +
-      dark_theme_visible_text() + theme(legend.position="bottom")
-    gp <- ggplotly(p, tooltip=c("x","y")) %>%
-      layout(xaxis=list(range=c(0, input$duration)), legend=list(orientation="h", x=0.5, xanchor="center", y=-0.2)) %>%
-      config(displayModeBar=FALSE)
     
-    htmlwidgets::onRender(gp, "syncPlotWithAudio")
+    # --------- TOP: RMSSD with zones ---------
+    # Midpoints of each zone
+    y_relaxed <- (info$upper + info$y_max)/2
+    y_avg     <- (info$lower + info$upper)/2
+    y_strain  <- (info$y_min  + info$lower)/2
+    
+    p1 <- ggplot(info$data, aes(x = Time_s, y = RMSSD_mean)) +
+      { if (!is.null(bands)) geom_ribbon(
+        data = bands,
+        aes(x = Time_s, ymin = ymin, ymax = ymax, fill = Zone),
+        inherit.aes = FALSE, alpha = 0.5, color = NA
+      ) } +
+      geom_line(color = "white", linewidth = 1.2, na.rm = TRUE) +
+      { if (have_thr) geom_hline(yintercept = info$mean,  color = "yellow", linetype = "dashed") } +
+      { if (have_thr) geom_hline(yintercept = c(info$lower, info$upper),
+                                 color = "yellow", linetype = "dotted") } +
+      scale_fill_manual(name = "Relative Zone", values = relative_colors, drop = FALSE) +
+      scale_y_continuous(
+        name = "Relative Zone",
+        breaks = c(y_strain, y_avg, y_relaxed),
+        labels = c("High Strain RMSSD", "Average RMSSD", "Relaxed RMSSD")
+      ) +
+      dark_theme_visible_text() +
+      theme(legend.position = "none")
+    
+    
+    gp1 <- ggplotly(p1, tooltip = c("x","y")) %>%
+      layout(
+        margin = list(l = 70, r = 20, t = 60, b = 0),
+        xaxis  = list(range = c(0, input$duration)),
+        legend = list(orientation = "h", x = 0.5, xanchor = "center", y = 1.1)
+      ) %>%
+      config(displayModeBar = FALSE)
+    
+    # --------- BOTTOM: Relative state timeline (contiguous segments, no gaps) ---------
+    df_runs <- info$data %>%
+      dplyr::filter(Time_s >= 0, Time_s <= input$duration) %>%
+      tidyr::complete(Time_s = 0:input$duration) %>%
+      dplyr::arrange(Time_s) %>%
+      tidyr::fill(Relative_Level, .direction = "down") %>%
+      dplyr::filter(!is.na(Relative_Level)) %>%
+      dplyr::mutate(Relative_Level = factor(Relative_Level, levels = levs)) %>%
+      dplyr::mutate(run_id = cumsum(Relative_Level != dplyr::lag(Relative_Level,
+                                                                 default = dplyr::first(Relative_Level)))) %>%
+      dplyr::group_by(run_id) %>%
+      dplyr::summarise(Relative_Level = dplyr::first(Relative_Level),
+                       xstart = min(Time_s),
+                       xend   = max(Time_s) + 1L,  # cover the last second fully
+                       .groups = "drop")
+    
+    p2 <- ggplot(df_runs) +
+      geom_segment(aes(x = xstart, xend = xend,
+                       y = Relative_Level, yend = Relative_Level,
+                       color = Relative_Level),
+                   linewidth = 6, lineend = "butt") +
+      scale_color_manual(values = relative_colors, name = "Relative Level") +
+      scale_x_continuous(expand = expansion(mult = c(0, 0.01))) +
+      labs(title = "RMSSD (Relative Stress) During Performance",
+           subtitle = "Dashed = session mean; Dotted = ±0.5 SD",
+           x = "Time (seconds)", y = "Relative State") +
+      dark_theme_visible_text() +
+      theme(legend.position = "none")
+    
+    gp2 <- ggplotly(p2, tooltip = c("x","colour")) %>%
+      layout(
+        margin = list(l = 70, r = 20, t = 50, b = 50),
+        xaxis  = list(range = c(0, input$duration))
+      ) %>%
+      config(displayModeBar = FALSE)
+    
+    # --------- Combine (perfect alignment) ---------
+    combo <- subplot(gp1, gp2, nrows = 2, shareX = TRUE,
+                     heights = c(0.65, 0.35), margin = 0.05) %>%
+      layout(plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', clickmode = "event+select")
+    
+    htmlwidgets::onRender(combo, "function(el, x){ if (window.syncPlotWithAudio) window.syncPlotWithAudio(el); }")
   })
+  
   
   output$loudness_plot <- renderPlotly({
     req(analysis_data())
-    p <- ggplot(analysis_data()$timeseries, aes(x = Time_s, y = Loudness_RMS)) + geom_line(color = "#FF004D", size = 1.0) + labs(title = "Musical Loudness (Dynamics)", x = NULL, y = "RMS Energy") + dark_theme_visible_text()
+    p <- ggplot(analysis_data()$timeseries, aes(x = Time_s, y = Loudness_RMS)) + geom_line(color = "#00CED1", size = 1.0) + labs(title = "Musical Loudness (Dynamics)", x = NULL, y = "RMS Energy") + dark_theme_visible_text()
     
     gp <- ggplotly(p) %>% 
       config(displayModeBar = FALSE)
-    
-    htmlwidgets::onRender(gp, "syncPlotWithAudio")
-  })
-  
-  output$relative_levels_plot <- renderPlotly({
-    info <- relative_data()
-    relative_colors <- c("Relatively Relaxed"="#4575b4","Near Session Average"="#abd9e9","Relatively High Strain"="#f46d43")
-    df <- info$data %>% dplyr::filter(!is.na(Relative_Level)) %>% dplyr::arrange(Time_s) %>% dplyr::mutate(run_id = cumsum(Relative_Level != dplyr::lag(Relative_Level, default = first(Relative_Level))))
-    p <- ggplot(df, aes(x=Time_s, y=Relative_Level, color=Relative_Level, group=run_id)) + geom_step(size=2.5) + scale_color_manual(values=relative_colors, name="Relative Level") + labs(title="Relative Strain/Recovery During Performance", subtitle="Levels are based on the session's own average RMSSD", x="Time (seconds)", y="Relative State") + dark_theme_visible_text() + theme(legend.position="bottom")
-    
-    gp <- ggplotly(p, tooltip=c("x","y","colour")) %>%
-      layout(legend=list(orientation="h", x=0.5, xanchor="center", y=-0.2)) %>%
-      config(displayModeBar=FALSE)
     
     htmlwidgets::onRender(gp, "syncPlotWithAudio")
   })
@@ -371,7 +442,7 @@ server <- function(input, output, session) {
   
   output$pitch_plot <- renderPlotly({
     req(analysis_data())
-    p <- ggplot(na.omit(analysis_data()$timeseries), aes(x = Time_s, y = Mean_Pitch_Hz)) + geom_line(color = "#32CD32", size = 1.0) + labs(title = "Mean Pitch (Melody)", x = "Time (seconds)", y = "Frequency (Hz)") + dark_theme_visible_text()
+    p <- ggplot(na.omit(analysis_data()$timeseries), aes(x = Time_s, y = Mean_Pitch_Hz)) + geom_line(color = "#32CD32", size = 1.0) + labs(title = "Pitch (Melody)", x = "Time (seconds)", y = "Frequency (Hz)") + dark_theme_visible_text()
     
     gp <- ggplotly(p) %>% 
       config(displayModeBar = FALSE)
@@ -385,9 +456,9 @@ server <- function(input, output, session) {
     data <- analysis_data()$timeseries
     
     p <- plot_ly(data, x = ~Time_s) %>% 
-      add_trace(y = ~RMSSD_mean, name = 'RMSSD (ms)', type = 'scatter', mode = 'lines', line = list(color = '#00BFFF', width = 3)) %>% 
-      add_trace(y = ~Loudness_RMS, name = 'Loudness (RMS)', type = 'scatter', mode = 'lines', line = list(color = '#FF004D', width = 2), yaxis = 'y2') %>% 
-      layout(title = list(text = "Joint Analysis: RMSSD vs. Loudness", font = list(color="white")), yaxis = list(title = list(text="RMSSD (ms)", font=list(color="#00BFFF")), color = "white", gridcolor = "#404040"), yaxis2 = list(title = list(text="Loudness (RMS)", font=list(color="#FF004D")), overlaying = 'y', side = 'right', color = "white", showgrid=FALSE), xaxis = list(title = "Time (seconds)", color = "white", gridcolor = "#404040"), plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', legend = list(orientation = 'h', x = 0.5, xanchor = 'center', y = -0.2, font = list(color='white')), margin = list(r = 80)) %>% 
+      add_trace(y = ~HR_mean, name = 'Heart Rate', type = 'scatter', mode = 'lines', line = list(color = '#FF004D', width = 3)) %>% 
+      add_trace(y = ~Loudness_RMS, name = 'Loudness (RMS)', type = 'scatter', mode = 'lines', line = list(color = '#00CED1', width = 3), yaxis = 'y2') %>% 
+      layout(title = list(text = "Joint Analysis: Heart Rate vs. Loudness", font = list(color="white")), yaxis = list(title = list(text="Heart Rate", font=list(color="#00BFFF")), color = "white", gridcolor = "#404040"), yaxis2 = list(title = list(text="Loudness (RMS)", font=list(color="#FF004D")), overlaying = 'y', side = 'right', color = "white", showgrid=FALSE), xaxis = list(title = "Time (seconds)", color = "white", gridcolor = "#404040"), plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', legend = list(orientation = 'h', x = 0.5, xanchor = 'center', y = -0.2, font = list(color='white')), margin = list(r = 80)) %>% 
       config(displayModeBar = FALSE)
     
     htmlwidgets::onRender(p, "syncPlotWithAudio")
@@ -399,8 +470,8 @@ server <- function(input, output, session) {
     
     p <- plot_ly(data, x = ~Time_s) %>% 
       add_trace(y = ~RMSSD_mean, name = 'RMSSD (ms)', type = 'scatter', mode = 'lines', line = list(color = '#00BFFF', width = 3)) %>% 
-      add_trace(y = ~Mean_Pitch_Hz, name = 'Mean Pitch (Hz)', type = 'scatter', mode = 'lines', line = list(color = '#32CD32', width = 2), yaxis = 'y2') %>% 
-      layout(title = list(text = "Joint Analysis: RMSSD vs. Mean Pitch", font = list(color="white")), yaxis = list(title = list(text="RMSSD (ms)", font=list(color="#00BFFF")), color = "white", gridcolor = "#404040"), yaxis2 = list(title = list(text="Mean Pitch (Hz)", font=list(color="#32CD32")), overlaying = 'y', side = 'right', color = "white", showgrid=FALSE), xaxis = list(title = "Time (seconds)", color = "white", gridcolor = "#404040"), plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', legend = list(orientation = 'h', x = 0.5, xanchor = 'center', y = -0.2, font = list(color='white')), margin = list(r = 80)) %>% 
+      add_trace(y = ~Mean_Pitch_Hz, name = 'Pitch (Hz)', type = 'scatter', mode = 'lines', line = list(color = '#32CD32', width = 3), yaxis = 'y2') %>% 
+      layout(title = list(text = "Joint Analysis: RMSSD vs. Pitch", font = list(color="white")), yaxis = list(title = list(text="RMSSD (ms)", font=list(color="#00BFFF")), color = "white", gridcolor = "#404040"), yaxis2 = list(title = list(text="Pitch (Hz)", font=list(color="#32CD32")), overlaying = 'y', side = 'right', color = "white", showgrid=FALSE), xaxis = list(title = "Time (seconds)", color = "white", gridcolor = "#404040"), plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', legend = list(orientation = 'h', x = 0.5, xanchor = 'center', y = -0.2, font = list(color='white')), margin = list(r = 80)) %>% 
       config(displayModeBar = FALSE)
     
     htmlwidgets::onRender(p, "syncPlotWithAudio")
@@ -412,7 +483,7 @@ server <- function(input, output, session) {
     
     p <- plot_ly(data, x = ~Time_s) %>% 
       add_trace(y = ~RMSSD_mean, name = 'RMSSD (ms)', type = 'scatter', mode = 'lines', line = list(color = '#00BFFF', width = 3)) %>% 
-      add_trace(y = ~Brightness_Centroid, name = 'Brightness (kHz)', type = 'scatter', mode = 'lines', line = list(color = '#FFA500', width = 2), yaxis = 'y2') %>% 
+      add_trace(y = ~Brightness_Centroid, name = 'Brightness (kHz)', type = 'scatter', mode = 'lines', line = list(color = '#FFA500', width = 3), yaxis = 'y2') %>% 
       layout(title = list(text = "Joint Analysis: RMSSD vs. Brightness", font = list(color="white")), yaxis = list(title = list(text="RMSSD (ms)", font=list(color="#00BFFF")), color = "white", gridcolor = "#404040"), yaxis2 = list(title = list(text="Brightness (kHz)", font=list(color="#FFA500")), overlaying = 'y', side = 'right', color = "white", showgrid=FALSE), xaxis = list(title = "Time (seconds)", color = "white", gridcolor = "#404040"), plot_bgcolor = '#1C1C27', paper_bgcolor = '#1C1C27', legend = list(orientation = 'h', x = 0.5, xanchor = 'center', y = -0.2, font = list(color='white')), margin = list(r = 80)) %>% 
       config(displayModeBar = FALSE)
     
