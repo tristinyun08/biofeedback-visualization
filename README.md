@@ -60,8 +60,13 @@ shiny::runApp()
 ## Usage
 
 ### Data Requirements
-- **HRV Data**: Text file containing RR intervals in milliseconds (one per line)
+- **HRV Data**: Text file containing RR intervals in milliseconds (one per line, single column format)
 - **Audio Data**: Audio file in supported formats (.m4a, .wav, .mp3, etc.)
+
+### Example Data
+The repository includes example data files to help you get started:
+- `example HRV.txt` - Sample HRV data file with RR intervals
+- `example audio.wma` - Sample audio file for testing the application
 
 ### Analysis Workflow
 1. Upload your HRV data file (.txt format)
